@@ -1,0 +1,12 @@
+
+train_data_path: /content/drive/MyDrive/data/train_malayalam.csv
+val_data_path: /content/drive/MyDrive/data/test_malayalam.csv
+test_data_path: /content/drive/MyDrive/data/test_malayalam.csv
+train_text: tweets
+train_label: Labels
+val_text: tweets
+val_label: label
+test_text: tweets
+test_label: label
+save_model_path: content/mal.bin
+save_metrics_path: content/metrics.json
