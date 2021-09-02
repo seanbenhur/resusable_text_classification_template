@@ -93,7 +93,7 @@ def get_predictions(dataloader, model_type, model_path, model_name, dropout, num
     return preds
 
 
-def compute_metrics(data_path, preds, label_column_name, metrics_save_path):
+def compute_metrics(data_path, preds, text_col_name,label_column_name, metrics_save_path, save_preds_path):
 
     outputs = np.array(preds) >= 0.5
     data = pd.read_csv(data_path)
@@ -112,6 +112,10 @@ def compute_metrics(data_path, preds, label_column_name, metrics_save_path):
         "MCC": mcc,
     }
 
+    data = pd.DataFrame({'Text': data[text_col_name].values, 'Actual Value': data[label_column_name].values,
+                          'Predicted Value': outputs })
+    data.to_csv(save_preds_path)
+
     with open(metrics_save_path, "w") as file:
         json.dump(metrics, file)
 
@@ -127,14 +131,15 @@ def main(cfg):
     preds = get_predictions(
         dataloader,
         cfg.model.model_type,
-        cfg.dataset.save_model_path,
+        cfg.dataset.finetuned_model_path,
         cfg.model.model_name,
         dropout,
         cfg.training.num_labels,
         device="cuda" if torch.cuda.is_available() else "cpu",
     )
 
-    compute_metrics(cfg.datset.test_data_path, preds, cfg.dataset.test_label, cfg.dataset.save_metrics_path)
+    compute_metrics(cfg.datset.test_data_path, preds, cfg.dataset.test_text, cfg.dataset.test_label, cfg.dataset.save_metrics_path,
+                      cfg.dataset.save_preds_path)
 
 
 if __name__ == "__main__":

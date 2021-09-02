@@ -1,4 +1,4 @@
 
-model_name: google/muril-base-cased
-tokenizer_name: google/muril-base-cased
-model_type: BertAttnHead
+model_name: 
+tokenizer_name: 
+model_type: 
