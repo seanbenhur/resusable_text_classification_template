@@ -1,5 +1,6 @@
 
 import json
+import logging
 
 import hydra
 import numpy as np
@@ -8,65 +9,24 @@ import torch
 from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from omegaconf.omegaconf import OmegaConf
 from transformers import AutoTokenizer
 
-from dataset import TangDataset
-from models import BERT, BertAttnhead, MeanPoolingModel
+from dataset import TextDataset
+
+from models import (Attention_Pooling_Model, Conv_Pooling_Model,
+                    Max_Pooling_Model, Mean_Max_Pooling_Model,
+                    MeanPoolingModel, Transformer, Transformer_CLS_Embeddings,
+                    Transformer_Pooler_Outputs)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Evaluate the trained models")
-    # data path
-    parser.add_argument(
-        "--data_path", type=str, default=None, help="The path to the test dataset"
-    )
-    # text columns
-    parser.add_argument(
-        "--text_column", type=str, default=None, help="Text column name"
-    )
-    # label columns
-    parser.add_argument(
-        "--label_column", type=str, default=None, help="Label column name"
-    )
-    # pretrained model name
-    parser.add_argument(
-        "--pretrained_model_name", type=str, default=None, help="Pretrained model name"
-    )
-    # model path
-    parser.add_argument(
-        "--model_path", type=str, default=None, help="The path to the pretrained model"
-    )
-    # model type
-    parser.add_argument(
-        "--model_type", type=str, default=None, help="Type of the model"
-    )
-    # metrics file path
-    parser.add_argument(
-        "--metrics_path",
-        type=str,
-        default=None,
-        help="The path to save the metrics file",
-    )
-
-    args = parser.parse_args()
-
-    # Sanity checks
-    if args.data_path is None:
-        raise ValueError("Need a dataset for testing")
-
-    else:
-        if args.data_path is not None:
-            extension = args.data_path.split(".")[-1]
-            assert extension in "csv", "`data file` should be a csv file."
-
-    return args
-
+logger = logging.getLogger(__name__)
 
 def create_dl(data_path, model_name, text_column, label_column):
     data = pd.read_csv(data_path)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    dataset = TangDataset(
+    dataset = TextDataset(
         data[text_column].values, data[label_column].values, tokenizer, train=False
     )
 
@@ -75,14 +35,49 @@ def create_dl(data_path, model_name, text_column, label_column):
     return dataloader
 
 
-def get_predictions(dataloader, model_type, model_path, model_name, device):
+def get_predictions(dataloader, model_type, model_path, model_name, dropout, num_labels, device):
 
-    if model_type == "MeanPoolingModel":
-        model = MeanPoolingModel(model_name)
-    elif model_type == "AttentionHead":
-        model = BertAttnhead(model_name)
+    # set model architecture
+    if model_type == "BertAttnhead":
+        model = Attention_Pooling_Model(
+            model_name, dropout, num_labels
+        )
+
+    elif model_type == "MeanPoolingModel":
+        model = MeanPoolingModel(
+            model_name, dropout, num_labels
+        )
+
+    elif model_type == "Transformer_Pooler_Outputs":
+        model = Transformer_Pooler_Outputs(
+           model_name, dropout, num_labels
+        )
+
+    elif model_type == "Transformer_CLS_Embeddings":
+        model = Transformer_CLS_Embeddings(
+            model_name, dropout, num_labels
+        )
+
+    elif model_type == "Max_Pooling_Model":
+        model = Max_Pooling_Model(
+            model_name, dropout, num_labels
+        )
+
+    elif model_type == "Mean_Max_Pooling_Model":
+        model = Mean_Max_Pooling_Model(
+            model_name, dropout, num_labels
+        )
+
+    elif model_type == "Conv_Pooling_Model":
+        model = Conv_Pooling_Model(
+            model_name, dropout, num_labels
+        )
+
     else:
-        model = BERT(model_name)
+        model = Transformer(
+            model_name, dropout, num_labels
+        )
+
 
     model.load_state_dict(torch.load(model_path))
     model.to(device)
@@ -120,21 +115,26 @@ def compute_metrics(data_path, preds, label_column_name, metrics_save_path):
     with open(metrics_save_path, "w") as file:
         json.dump(metrics, file)
 
-@
-def main():
-    args = parse_args()
+
+@hydra.main(config_path="./configs", config_name="config")
+def main(cfg):
+    logger.info(OmegaConf.to_yaml(cfg, resolve=True))
     dataloader = create_dl(
-        args.data_path, args.pretrained_model_name, args.text_column, args.label_column
+        cfg.dataset.test_data_path, cfg.model.model_name, 
+        cfg.dataset.test_text, cfg.dataset.test_label
     )
+    dropout=0
     preds = get_predictions(
         dataloader,
-        args.model_type,
-        args.model_path,
-        args.pretrained_model_name,
+        cfg.model.model_type,
+        cfg.dataset.save_model_path,
+        cfg.model.model_name,
+        dropout,
+        cfg.training.num_labels,
         device="cuda" if torch.cuda.is_available() else "cpu",
     )
 
-    compute_metrics(args.data_path, preds, args.label_column, args.metrics_path)
+    compute_metrics(cfg.datset.test_data_path, preds, cfg.dataset.test_label, cfg.dataset.save_metrics_path)
 
 
 if __name__ == "__main__":
