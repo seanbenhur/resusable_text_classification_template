@@ -79,7 +79,7 @@ def get_predictions(dataloader, model_type, model_path, model_name, dropout, num
         )
 
 
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path,map_location=device))
     model.to(device)
 
     preds = []
