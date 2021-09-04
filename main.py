@@ -94,7 +94,7 @@ def main(cfg):
     logger.info(OmegaConf.to_yaml(cfg, resolve=True))
     logger.info(f"Using the model: {cfg.model.model_name}")
     run = wandb.init(
-        project=cfg.wandb.project_name, group=cfg.wandb.group_name, config=cfg
+        project=cfg.wandb.project_name, group=cfg.wandb.group_name, save_code=True,config=cfg
     )
 
     train_dataloader, val_dataloader = get_loader(
@@ -209,6 +209,9 @@ def main(cfg):
 
     for epoch in range(cfg.training.max_epochs):
 
+        
+        model_artifact = wandb.Artifact('model', type='model')
+
         train_loss, train_acc, lr = train_fn(
             train_dataloader,
             model,
@@ -245,7 +248,8 @@ def main(cfg):
             best_valid_loss = epoch_valid_loss
             logger.info(f"Saving best model in : {cfg.dataset.save_model_path}")
             torch.save(model.state_dict(), cfg.dataset.save_model_path)
-
+        
+        artifact.add_file(cfg.dataset.save_model_path)
         logger.info(f"epoch: {epoch+1}")
         logger.info(
             f"train_loss: {epoch_train_loss:.3f}, train_acc: {epoch_train_acc:.3f}"

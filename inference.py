@@ -38,7 +38,7 @@ def create_dl(data_path, model_name, text_column, label_column):
 def get_predictions(dataloader, model_type, model_path, model_name, dropout, num_labels, device):
 
     # set model architecture
-    if model_type == "BertAttnhead":
+    if model_type == "AttentionPoolingModel":
         model = Attention_Pooling_Model(
             model_name, dropout, num_labels
         )
@@ -113,7 +113,7 @@ def compute_metrics(data_path, preds, text_col_name,label_column_name, metrics_s
     }
 
     data = pd.DataFrame({'Text': data[text_col_name].values, 'Actual Value': data[label_column_name].values,
-                          'Predicted Value': outputs })
+                          'Predicted Value': outputs.flatten() })
     data.to_csv(save_preds_path)
 
     with open(metrics_save_path, "w") as file:
@@ -138,7 +138,7 @@ def main(cfg):
         device="cuda" if torch.cuda.is_available() else "cpu",
     )
 
-    compute_metrics(cfg.datset.test_data_path, preds, cfg.dataset.test_text, cfg.dataset.test_label, cfg.dataset.save_metrics_path,
+    compute_metrics(cfg.dataset.test_data_path, preds, cfg.dataset.test_text, cfg.dataset.test_label, cfg.dataset.save_metrics_path,
                       cfg.dataset.save_preds_path)
 
 
