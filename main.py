@@ -1,6 +1,8 @@
 import logging
 from pathlib import Path
 
+from transformers.utils.dummy_pt_objects import RetriBertModel
+
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,19 +32,18 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 def get_loader(
     train_data_path,
-    valid_data_path,
     train_data_text,
-    val_data_text,
     train_data_label,
-    val_data_label,
     pretrained_model_name,
     batch_size,
+    val_data_path = None,
+    val_data_text = None,
+    val_data_label = None
+
 ):
+    tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name)
 
     train_data = pd.read_csv(train_data_path)
-    val_data = pd.read_csv(valid_data_path)
-
-    tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name)
 
     train_ds = TextDataset(
         train_data[train_data_text].values,
@@ -50,11 +51,7 @@ def get_loader(
         tokenizer,
     )
 
-    valid_ds = TextDataset(
-        val_data[val_data_text].values, val_data[val_data_label].values, tokenizer
-    )
-
-    # sampler
+   # sampler
     counts = np.bincount(train_data[train_data_label].values)
 
     label_weights = 1.0 / counts
@@ -69,11 +66,22 @@ def get_loader(
         pin_memory=True,
     )
 
-    valid_dl = DataLoader(
-        valid_ds, batch_size=batch_size, num_workers=4, pin_memory=True
-    )
 
-    return train_dl, valid_dl
+    if val_data_path is not None:
+        val_data = pd.read_csv(val_data_path)
+        
+        valid_ds = TextDataset(
+            val_data[val_data_text].values, val_data[val_data_label].values, tokenizer
+            )
+            
+            
+        valid_dl = DataLoader(
+            valid_ds, batch_size=batch_size, num_workers=4, pin_memory=True
+            )
+            
+        return train_dl, valid_dl
+
+    return train_dl
 
 
 def bcewithlogits_loss_fn(outputs, targets, reduction=None):
@@ -97,16 +105,26 @@ def main(cfg):
         project=cfg.wandb.project_name, group=cfg.wandb.group_name, save_code=True,config=cfg
     )
 
-    train_dataloader, val_dataloader = get_loader(
-        cfg.dataset.train_data_path,
-        cfg.dataset.val_data_path,
-        cfg.dataset.train_text,
-        cfg.dataset.val_text,
-        cfg.dataset.train_label,
-        cfg.dataset.val_label,
-        cfg.model.model_name,
-        cfg.training.batch_size,
-    )
+    if cfg.dataset.val_data_path is not None:
+        
+        train_dataloader, val_dataloader = get_loader(
+            cfg.dataset.train_data_path,
+            cfg.dataset.train_text,
+            cfg.dataset.train_label,
+            cfg.model.model_name,
+            cfg.training.batch_size,
+            cfg.dataset.val_data_path,
+            cfg.dataset.val_text,
+            cfg.dataset.val_label
+             )
+
+    train_dataloader = get_loader(
+            cfg.dataset.train_data_path,
+            cfg.dataset.train_text,
+            cfg.dataset.train_label,
+            cfg.model.model_name,
+            cfg.training.batch_size
+             )
 
     # set model architecture
     if cfg.model.model_type == "BertAttnhead":
@@ -202,15 +220,17 @@ def main(cfg):
 
     train_losses = []
     train_accs = []
-    valid_losses = []
-    valid_accs = []
+
+    if cfg.dataset.val_path is not None:
+        valid_losses = []
+        valid_accs = []
 
     logger.info("Start Training")
 
     for epoch in range(cfg.training.max_epochs):
 
         
-        model_artifact = wandb.Artifact('model', type='model')
+        artifact = wandb.Artifact('model', type='model')
 
         train_loss, train_acc, lr = train_fn(
             train_dataloader,
@@ -221,21 +241,27 @@ def main(cfg):
             scheduler,
             cfg.training.batch_size,
         )
-        valid_loss, valid_acc = evaluate_fn(
-            val_dataloader, model, loss_func, epoch, cfg.training.batch_size
-        )
+
+        if cfg.dataset.val_path is not None:
+            valid_loss, valid_acc = evaluate_fn(
+                val_dataloader, model, loss_func, epoch, cfg.training.batch_size
+                )
 
         train_losses.extend(train_loss)
         train_accs.extend(train_acc)
-        valid_losses.extend(valid_loss)
-        valid_accs.extend(valid_acc)
+        
+        if cfg.dataset.val_path is not None:
+            valid_losses.extend(valid_loss)
+            valid_accs.extend(valid_acc)
 
         epoch_train_loss = np.mean(train_loss)
         epoch_train_acc = np.mean(train_acc)
-        epoch_valid_loss = np.mean(valid_loss)
-        epoch_valid_acc = np.mean(valid_acc)
 
-        run.log(
+        if cfg.dataset.val_path is not None:
+            epoch_valid_loss = np.mean(valid_loss)
+            epoch_valid_acc = np.mean(valid_acc)
+
+            run.log(
             {
                 "Epoch Train Loss": epoch_train_loss,
                 "Epoch Train Accuracy": epoch_train_acc,
@@ -244,19 +270,42 @@ def main(cfg):
             }
         )
 
-        if epoch_valid_loss < best_valid_loss:
-            best_valid_loss = epoch_valid_loss
-            logger.info(f"Saving best model in : {cfg.dataset.save_model_path}")
-            torch.save(model.state_dict(), cfg.dataset.save_model_path)
+        else:
+            run.log(
+                {
+                "Epoch Train Loss": epoch_train_loss,
+                "Epoch Train Accuracy": epoch_train_acc
+                }
+                )
+
+
+        if cfg.dataset.val_path is not None:
+            
+            if epoch_valid_loss < best_valid_loss:
+                
+                best_valid_loss = epoch_valid_loss
+
+                logger.info(f"Saving best model in : {cfg.dataset.save_model_path}")
+                
+                torch.save(model.state_dict(), cfg.dataset.save_model_path)
+
+        else:
+            if epoch_train_loss < best_valid_loss:
+                best_valid_loss = epoch_train_loss
+                logger.info(f"Saving best model in : {cfg.dataset.save_model_path}")
+                torch.save(model.state_dict(), cfg.dataset.save_model_path)
         
         artifact.add_file(cfg.dataset.save_model_path)
         logger.info(f"epoch: {epoch+1}")
         logger.info(
             f"train_loss: {epoch_train_loss:.3f}, train_acc: {epoch_train_acc:.3f}"
         )
-        logger.info(
-            f"valid_loss: {epoch_valid_loss:.3f}, valid_acc: {epoch_valid_acc:.3f}"
-        )
+
+        if cfg.dataset.val_path is not None:
+            
+            logger.info(
+                f"valid_loss: {epoch_valid_loss:.3f}, valid_acc: {epoch_valid_acc:.3f}"
+                )
 
 
 if __name__ == "__main__":
