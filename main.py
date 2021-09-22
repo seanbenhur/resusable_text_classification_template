@@ -127,12 +127,12 @@ def main(cfg):
              )
 
     # set model architecture
-    if cfg.model.model_type == "BertAttnhead":
+    if cfg.model.model_type == "":
         model = Attention_Pooling_Model(
             cfg.model.model_name, cfg.training.dropout, cfg.training.num_labels
         )
 
-    elif cfg.model.model_type == "MeanPoolingModel":
+    elif cfg.model.model_type == "Mean_Pooling_Model":
         model = MeanPoolingModel(
             cfg.model.model_name, cfg.training.dropout, cfg.training.num_labels
         )
@@ -221,7 +221,7 @@ def main(cfg):
     train_losses = []
     train_accs = []
 
-    if cfg.dataset.val_path is not None:
+    if cfg.dataset.val_data_path is not None:
         valid_losses = []
         valid_accs = []
 
@@ -242,7 +242,7 @@ def main(cfg):
             cfg.training.batch_size,
         )
 
-        if cfg.dataset.val_path is not None:
+        if cfg.dataset.val_data_path is not None:
             valid_loss, valid_acc = evaluate_fn(
                 val_dataloader, model, loss_func, epoch, cfg.training.batch_size
                 )
@@ -250,14 +250,14 @@ def main(cfg):
         train_losses.extend(train_loss)
         train_accs.extend(train_acc)
         
-        if cfg.dataset.val_path is not None:
+        if cfg.dataset.val_data_path is not None:
             valid_losses.extend(valid_loss)
             valid_accs.extend(valid_acc)
 
         epoch_train_loss = np.mean(train_loss)
         epoch_train_acc = np.mean(train_acc)
 
-        if cfg.dataset.val_path is not None:
+        if cfg.dataset.val_data_path is not None:
             epoch_valid_loss = np.mean(valid_loss)
             epoch_valid_acc = np.mean(valid_acc)
 
@@ -279,7 +279,7 @@ def main(cfg):
                 )
 
 
-        if cfg.dataset.val_path is not None:
+        if cfg.dataset.val_data_path is not None:
             
             if epoch_valid_loss < best_valid_loss:
                 
@@ -301,7 +301,7 @@ def main(cfg):
             f"train_loss: {epoch_train_loss:.3f}, train_acc: {epoch_train_acc:.3f}"
         )
 
-        if cfg.dataset.val_path is not None:
+        if cfg.dataset.val_data_path is not None:
             
             logger.info(
                 f"valid_loss: {epoch_valid_loss:.3f}, valid_acc: {epoch_valid_acc:.3f}"
