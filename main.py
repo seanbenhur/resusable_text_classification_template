@@ -127,13 +127,13 @@ def main(cfg):
              )
 
     # set model architecture
-    if cfg.model.model_type == "":
+    if cfg.model.model_type == "Attention_Pooling_Model":
         model = Attention_Pooling_Model(
             cfg.model.model_name, cfg.training.dropout, cfg.training.num_labels
         )
 
     elif cfg.model.model_type == "Mean_Pooling_Model":
-        model = MeanPoolingModel(
+        model = Mean_Pooling_Model(
             cfg.model.model_name, cfg.training.dropout, cfg.training.num_labels
         )
 

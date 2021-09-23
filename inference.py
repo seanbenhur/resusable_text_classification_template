@@ -16,7 +16,7 @@ from dataset import TextDataset
 
 from models import (Attention_Pooling_Model, Conv_Pooling_Model,
                     Max_Pooling_Model, Mean_Max_Pooling_Model,
-                    MeanPoolingModel, Transformer, Transformer_CLS_Embeddings,
+                    Mean_Pooling_Model, Transformer, Transformer_CLS_Embeddings,
                     Transformer_Pooler_Outputs)
 
 
@@ -38,13 +38,13 @@ def create_dl(data_path, model_name, text_column, label_column):
 def get_predictions(dataloader, model_type, model_path, model_name, dropout, num_labels, device):
 
     # set model architecture
-    if model_type == "AttentionPoolingModel":
+    if model_type == "Attention_Pooling_Model":
         model = Attention_Pooling_Model(
             model_name, dropout, num_labels
         )
 
-    elif model_type == "MeanPoolingModel":
-        model = MeanPoolingModel(
+    elif model_type == "Mean_Pooling_Model":
+        model = Mean_Pooling_Model(
             model_name, dropout, num_labels
         )
 

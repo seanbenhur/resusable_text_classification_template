@@ -3,7 +3,7 @@ import torch.nn as nn
 from transformers import AutoConfig, AutoModel
 
 
-class MeanPoolingModel(nn.Module):
+class Mean_Pooling_Model(nn.Module):
     def __init__(self, path, dropout, num_labels):
         super().__init__()
 
