@@ -4,5 +4,5 @@ from .transformer_cls_embeddings import Transformer_CLS_Embeddings
 from .transformer_conv_pooler import Conv_Pooling_Model
 from .transformer_max_pooler import Max_Pooling_Model
 from .transformer_mean_max_pooler import Mean_Max_Pooling_Model
-from .transformer_mean_pooler import MeanPoolingModel
+from .transformer_mean_pooler import Mean_Pooling_Model
 from .transformer_pooler_outputs import Transformer_Pooler_Outputs
