@@ -88,6 +88,7 @@ def bcewithlogits_loss_fn(outputs, targets, reduction=None):
 
 
 def crossentropy_loss_fn(outputs, targets, reduction=None):
+    targets = targets.long()
     return nn.CrossEntropyLoss(reduction)(outputs, targets)
 
 
