@@ -6,7 +6,7 @@ import hydra
 import numpy as np
 import pandas as pd
 import torch
-from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef
+from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef, precision_score, recall_score
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from omegaconf.omegaconf import OmegaConf
@@ -82,22 +82,36 @@ def get_predictions(dataloader, model_type, model_path, model_name, dropout, num
     model.load_state_dict(torch.load(model_path,map_location=device))
     model.to(device)
 
-    preds = []
+    pred = []
     for idx, inputs in enumerate(tqdm(dataloader)):
 
         input_ids = inputs["input_ids"].to(device, dtype=torch.long)
         attention_mask = inputs["attention_mask"].to(device, dtype=torch.long)
         outputs = model(input_ids, attention_mask)
-        preds.extend(torch.sigmoid(outputs).cpu().detach().numpy().tolist())
+        if num_labels<=1:
+            pred.extend(torch.sigmoid(outputs).cpu().detach().numpy().tolist())
+        #for multiclass 
+        else:
+            preds = outputs.argmax(dim=1)
+            preds = preds.cpu().detach().numpy()
+            pred.extend(preds)
+    return pred
 
-    return preds
 
+def compute_metrics(data_path, num_labels, preds, text_col_name,label_column_name, metrics_save_path, save_preds_path):
 
-def compute_metrics(data_path, preds, text_col_name,label_column_name, metrics_save_path, save_preds_path):
-
-    outputs = np.array(preds) >= 0.5
+    if num_labels <=1:
+        outputs = np.array(preds) >= 0.5
+    else:
+        outputs = preds
     data = pd.read_csv(data_path)
     targets = data[label_column_name].values
+    weighted_precision = precision_score(targets, outputs, average='weighted')
+    weighted_recall = recall_score(targets, outputs, average='weighted')
+    micro_precision = precision_score(targets, outputs, average='micro')
+    macro_precision = precision_score(targets, outputs, average='macro')
+    macro_recall = recall_score(targets, outputs, average='macro')
+    micro_recall = recall_score(targets, outputs, average='micro')
     weighted_f1_score = f1_score(targets, outputs, average="weighted")
     micro_f1_score = f1_score(targets, outputs, average="micro")
     macro_f1_score = f1_score(targets, outputs, average="macro")
@@ -108,12 +122,23 @@ def compute_metrics(data_path, preds, text_col_name,label_column_name, metrics_s
         "Weighted F1 score": weighted_f1_score,
         "Micro f1 score": micro_f1_score,
         "Macro f1 score": macro_f1_score,
+        "Weighted Precision score": weighted_precision,
+        "Micro precision score": micro_precision,
+        "Macro precision score": macro_precision,
+        "Weighted Recall score": weighted_recall,
+        "Micro recall score": micro_recall,
+        "Macro recall score": macro_recall,
         "Accuracy": accuracy,
         "MCC": mcc,
     }
 
-    data = pd.DataFrame({'Text': data[text_col_name].values, 'Actual Value': data[label_column_name].values,
+    if num_labels <=1:
+        data = pd.DataFrame({'Text': data[text_col_name].values, 'Actual Value': data[label_column_name].values,
                           'Predicted Value': outputs.flatten() })
+    else:
+          data = pd.DataFrame({'Text': data[text_col_name].values, 'Actual Value': data[label_column_name].values,
+                          'Predicted Value': outputs })
+
     data.to_csv(save_preds_path)
 
     with open(metrics_save_path, "w") as file:
@@ -138,7 +163,7 @@ def main(cfg):
         device="cuda" if torch.cuda.is_available() else "cpu",
     )
 
-    compute_metrics(cfg.dataset.test_data_path, preds, cfg.dataset.test_text, cfg.dataset.test_label, cfg.dataset.save_metrics_path,
+    compute_metrics(cfg.dataset.test_data_path, cfg.training.num_labels, preds, cfg.dataset.test_text, cfg.dataset.test_label, cfg.dataset.save_metrics_path,
                       cfg.dataset.save_preds_path)
 
 
