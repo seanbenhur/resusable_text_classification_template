@@ -31,7 +31,7 @@ class Attention_Pooling_Model(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.linear = nn.Linear(self.config.hidden_size, num_labels)
 
-        if init_weights=True:
+        if init_weights:
             self._init_weights(self.linear)
         
     def _init_weights(self, module):
