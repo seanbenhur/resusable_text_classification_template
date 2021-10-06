@@ -7,9 +7,9 @@
 ​1. Fork the repo to your own github account. Click the Fork button to
 create your own repo copy under your GitHub account. Once forked, you're
 responsible for keeping your repo copy up-to-date with the upstream
-py_fresh repo.
+this repo.
 
-​2. Download a copy of your remote username/py_fresh repo to your
+​2. Download a copy of your remote username/reusable_text_classification_template repo to your
 local machine. This is the working directory where you will make
 changes:
 
@@ -26,7 +26,7 @@ $ pip install -r requirements.txt
 ## Step 2: Stay in Sync with the original (upstream) repo
 
 1.  Set the upstream to sync with this repo. This will keep you in sync
-    with py_fresh easily.
+    with this repo easily.
 
 ```bash
 $ git remote add upstream https://github.com/seanbenhur/resusable_text_classification_template.git
@@ -81,7 +81,7 @@ gh pr create -B master -b "enter body of PR here" -t "enter title"
 #### 2. Confirm PR was created
 
 You can confirm that your PR has been created by running the following
-command, from the py_fresh folder:
+command, from the folder:
 
 ```bash
 gh pr list
@@ -148,9 +148,4 @@ git push origin <enter-branch-name-same-as-before>
 Maintainers and other contributors will review your pull request. Please
 participate in the discussion and make the requested changes. When your
 pull request is approved, it will be merged into the upstream
-py_fresh repo.
-
-> **note**
->
-> py_fresh repository has CI checking. It will automatically check your code
-> for build as well.
+ repo.
