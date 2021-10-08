@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 from transformers import AdamW, AutoTokenizer, get_scheduler
 
+from losses import bcewithlogits_loss_fn, crossentropy_loss_fn, mse_loss_fn
 from dataset import TextDataset
 from models import (Attention_Pooling_Model, Conv_Pooling_Model,
                     Max_Pooling_Model, Mean_Max_Pooling_Model,
@@ -82,18 +83,6 @@ def get_loader(
 
     return train_dl
 
-
-def bcewithlogits_loss_fn(outputs, targets, reduction=None):
-    return nn.BCEWithLogitsLoss(reduction)(outputs, targets.view(-1, 1))
-
-
-def crossentropy_loss_fn(outputs, targets, reduction=None):
-    targets = targets.long()
-    return nn.CrossEntropyLoss(reduction)(outputs, targets)
-
-
-def mse_loss_fn(outputs, targets, reduction=None):
-    return nn.MSELoss(reduction)(outputs, targets.view(-1, 1))
 
 
 @hydra.main(config_path="./configs", config_name="config")
@@ -286,8 +275,9 @@ def main(cfg):
                 best_valid_loss = epoch_valid_loss
 
                 logger.info(f"Saving best model in : {cfg.dataset.save_model_path}")
-                
-                torch.save(model.state_dict(), cfg.dataset.save_model_path)
+                save_model_dir = Path(cfg.dataset.save_model_path).mkdir(exist_ok=True)
+                save_model_path = f"{save_model_dir}_{cfg.model.model_name}_{cfg.model.model_type}.bin"
+                torch.save(model.state_dict(), save_model_path)
 
         else:
             if epoch_train_loss < best_valid_loss:
