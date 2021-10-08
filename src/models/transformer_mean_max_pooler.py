@@ -9,10 +9,11 @@ class Mean_Max_Pooling_Model(nn.Module):
 
     def __init__(self, path, dropout, num_labels):
         super().__init__()
+
         self.model = AutoModel.from_pretrained(path)
-        self.config = AutoConfig.from_pretrained(path)
+        config = AutoConfig.from_pretrained(path)
         self.dropout = nn.Dropout(dropout)
-        self.linear = nn.Linear(self.config.hidden_size, num_labels)
+        self.linear = nn.Linear(config.hidden_size*2, num_labels)
 
     def forward(self, input_ids, attention_mask):
         outputs = self.model(input_ids, attention_mask)

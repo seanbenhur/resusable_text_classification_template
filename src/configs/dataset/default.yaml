@@ -1,13 +1,14 @@
 
-train_data_path: ../input/tamiloffensivehasoc/data_cleaned.csv
-val_data_path: ../input/tamiloffensivehasoc/test_clen.csv
-test_data_path: ../input/tamiloffensivehasoc/test_clen_transliterated.csv
-train_text: review
+train_data_path: ../input/demo-template/train.csv
+val_data_path: ../input/demo-template/val.csv
+test_data_path: ../input/demo-template/train.csv
+train_text: tweet
 train_label: label
-val_text: review
+val_text: tweet
 val_label: label
-test_text: tweets
+test_text: tweet
 test_label: label
+n_splits: 3
 save_model_path: tanglish_hasoc.bin
 finetuned_model_path: tanglish_hasoc.bin
 save_metrics_path: metrics.json
