@@ -9,7 +9,8 @@ val_label: label
 test_text: tweet
 test_label: label
 n_splits: 3
-save_model_path: tanglish_hasoc.bin
-finetuned_model_path: tanglish_hasoc.bin
+save_model_path: distilbert.bin
+finetuned_model_path: distilbert.bin
+save_metrics_path: metrics.json
 save_metrics_path: metrics.json
 save_preds_path: preds.csv
