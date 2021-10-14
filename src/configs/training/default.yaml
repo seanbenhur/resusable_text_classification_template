@@ -3,9 +3,9 @@ max_epochs: 3
 lr: 2e-5
 batch_size: 8
 weight_decay: 0.01
-scheduler: linear
+scheduler: linear      #type of scheduler
 dropout: 0.3
-num_labels: 1
+num_labels: 1                
 warmup_steps: 0
 loss_func: bceloss #three types of loss currently available bceloss(BCEwithlogitsloss), crossentropy(CrossEntropy) mseloss(MSELoss)
 training_dir: checkpoint

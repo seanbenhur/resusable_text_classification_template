@@ -1,4 +1,4 @@
 
-model_name: distilbert-base-uncased 
-tokenizer_name: distilbert-base-uncased
+model_name: distilbert-base-uncased                    #name of pretrained model
+tokenizer_name: distilbert-base-uncased                #name of tokenizer
 model_type: 

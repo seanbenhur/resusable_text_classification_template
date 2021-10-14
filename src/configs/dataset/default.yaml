@@ -1,16 +1,15 @@
 
-train_data_path: ../input/demo-template/train.csv
-val_data_path: ../input/demo-template/val.csv
-test_data_path: ../input/demo-template/train.csv
-train_text: tweet
-train_label: label
-val_text: tweet
-val_label: label
-test_text: tweet
-test_label: label
-n_splits: 3
-save_model_path: distilbert.bin
-finetuned_model_path: distilbert.bin
-save_metrics_path: metrics.json
-save_metrics_path: metrics.json
-save_preds_path: preds.csv
+train_data_path: ../input/demo-template/train.csv   #path to the training dataset
+val_data_path: ../input/demo-template/val.csv       #path to the validation dataset
+test_data_path: ../input/demo-template/train.csv    #path to the test dataset
+train_text: tweet                                   #name of the column containing text in train dataset
+train_label: label                                  #name of the column containing label in train dataset
+val_text: tweet                                     #name of the column containing text in val dataset
+val_label: label                                    #name of the column containing label in val dataset
+test_text: tweet                                    #name of the column containing text in test dataset
+test_label: label                                   #name of the column containing label in test dataset
+n_splits: 3                                         #number of splits for KFOLD
+save_model_path: distilbert.bin                     #path to save model
+finetuned_model_path: distilbert.bin                #path to the finetuned model
+save_metrics_path: metrics.json                     #path to save the metics file
+save_preds_path: preds.csv                          #path to save the predictions
