@@ -1,4 +1,4 @@
 
-model_name: xlm-roberta-large 
-tokenizer_name: xlm-roberta-large
-model_type: Attention_Pooling_Model
+model_name: distilbert-base-uncased                    #name of pretrained model
+tokenizer_name: distilbert-base-uncased                #name of tokenizer
+model_type: 

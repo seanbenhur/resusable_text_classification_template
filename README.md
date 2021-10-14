@@ -7,7 +7,7 @@ This is a complete resusable template for text classification powered with hydra
 <h2>🙌Using this template in your project</h2>
 
 - First, click the `Use as template` button and create yor repo
-- Clone the repo in your local machine, For example `https://github.com/seanbenhur/resusable_text_classification_template.git`
+- Clone the repo in your local machine, For example `git clone https://github.com/seanbenhur/resusable_text_classification_template.git`
 - Navigate to the `src ` directory and open your terminal
 - Run `python main.py` to start training.
 - Since this project uses hydra, it supports multirun, please refer to hydra documentation for more info
