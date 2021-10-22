@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-
+import os
 
 import hydra
 import matplotlib.pyplot as plt
@@ -273,17 +273,24 @@ def main(cfg):
             if epoch_valid_loss < best_valid_loss:
                 
                 best_valid_loss = epoch_valid_loss
+                save_model_path = os.path.splitext(cfg.dataset.save_model_path)[0]
 
-                logger.info(f"Saving best model in : {cfg.dataset.save_model_path}")
-                torch.save(model.state_dict(), cfg.dataset.save_model_path)
+                save_model_path = f"{save_model_path}_{epoch}.bin"
+                logger.info(f"Saving best model in : {save_model_path}")
+                torch.save(model.state_dict(), save_model_path)
 
         else:
             if epoch_train_loss < best_valid_loss:
                 best_valid_loss = epoch_train_loss
                 logger.info(f"Saving best model in : {cfg.dataset.save_model_path}")
-                torch.save(model.state_dict(), cfg.dataset.save_model_path)
+                
+                save_model_path = os.path.splitext(cfg.dataset.save_model_path)[0]
+
+                save_model_path = f"{save_model_path}_{epoch}.bin"
+                logger.info(f"Saving best model in : {save_model_path}")
+                torch.save(model.state_dict(), save_model_path)
         
-        artifact.add_file(cfg.dataset.save_model_path)
+        artifact.add_file(save_model_path)
         logger.info(f"epoch: {epoch+1}")
         logger.info(
             f"train_loss: {epoch_train_loss:.3f}, train_acc: {epoch_train_acc:.3f}"
